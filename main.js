@@ -1,6 +1,7 @@
 $(document).ready(function() {
     console.log( "i'm ready now!" );
 
+    var apiCallInterval = 1000 / 5
     var throttle = function( fn, delay ) {
         var now = (new Date()).getTime();
         var nextExec = window.THROTTLE_NEXT_EXEC;
@@ -15,7 +16,14 @@ $(document).ready(function() {
         }, timeout);
     }
 
-    var apiCallInterval = 1000 / 5
+    var lsPrefix = "taggedItemsQuery_";
+    var lsget = function(key) {
+        return localStorage.getItem( lsPrefix + key );
+    }
+    var lsset = function(key, value) {
+        localStorage.setItem( lsPrefix + key, value );
+    }
+
     var onApiResponse = function(data) {
         console.log(data);
     }
@@ -30,10 +38,16 @@ $(document).ready(function() {
         cache     : cache
     });
 
-    var DATACACHE = { artists: [],
-                      tracks: [],
+    var DATACACHE = { artists: {},
+                      tracks: {},
                       tags: []
                     };
+    var dataCacheStr = lsget("datacache");
+    var lastCache = lsget("lastcache");
+    var cacheAgeThreshold = 1000 * 60 * 60 * 24 * 7;
+    if ( dataCacheStr !== null ) {
+        DATACACHE = JSON.parse( dataCacheStr );
+    }
 
     var lastfmUser = "aid9990";
 
@@ -127,23 +141,36 @@ $(document).ready(function() {
 
     // ---------------------------------------------------------------
 
-    throttle(function(){
-        lastfm.user.getTopArtists( {"user": lastfmUser,
-                                    "period": "3month",
-                                   },
-                                   { "success": processTopArtists,
-                                     "error": onApiError
-                                   }
-                                 );
-    }, apiCallInterval);
+    if ( DATACACHE.artists.length == 0
+         || DATACACHE.tracks.length == 0
+         || DATACACHE.tags.length == 0
+         || ( lastCache !== null && (new Date()).getTime() - lastCache > cacheAgeThreshold )
+       ) {
+        throttle(function(){
+            lastfm.user.getTopArtists( {"user": lastfmUser,
+                                        "period": "3month",
+                                       },
+                                       { "success": processTopArtists,
+                                         "error": onApiError
+                                       }
+                                     );
+        }, apiCallInterval);
 
-    throttle(function(){
-        lastfm.user.getTopTracks( {"user": lastfmUser,
-                                   "period": "3month",
-                                  },
-                                  { "success": processTopTracks,
-                                    "error": onApiError
-                                  }
-                                );
-    }, apiCallInterval);
+        throttle(function(){
+            lastfm.user.getTopTracks( {"user": lastfmUser,
+                                       "period": "3month",
+                                      },
+                                      { "success": processTopTracks,
+                                        "error": onApiError
+                                      }
+                                    );
+        }, apiCallInterval);
+
+        lastCache = (new Date()).getTime();
+    }
+
+    $(window).unload( function() {
+        lsset("datacache", JSON.stringify( DATACACHE ) );
+        lsset("lastcache", lastCache );
+    });
 });
