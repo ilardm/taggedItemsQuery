@@ -218,13 +218,24 @@ $(document).ready(function() {
                 return true;
             });
 
-            return (qsource.length > 0 ? qsource[0] : {});
+            return qsource;
         });
 
         var nowUsage = (new Date()).getTime();
-        ret.forEach( function(itm) {
-            DATACACHE[mode][itm.name].lastUsage = nowUsage;
-        });
+        ret = ret.reduce( function(prev, curr) {
+            var notInPrev = curr.filter( function(item) {
+                return prev.indexOf(item) < 1;
+            });
+
+            if ( notInPrev.length > 0 ) {
+                var itemInUse = notInPrev[0];
+
+                DATACACHE[mode][itemInUse.name].lastUsage = nowUsage;
+                prev.push( itemInUse );
+            }
+
+            return prev;
+        }, []);
 
         dataCacheAltSync();
 
