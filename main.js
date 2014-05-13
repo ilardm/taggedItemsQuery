@@ -45,12 +45,7 @@ $(document).ready(function() {
     var DATACACHEALT = { artists: [],
                          tracks: []
                        };
-    var dataCacheStr = lsget("datacache");
-    var lastCache = parseInt( lsget("lastcache") );
-    var cacheAgeThreshold = 1000 * 60 * 60 * 24 * 7;
-    if ( dataCacheStr !== null ) {
-        DATACACHE = JSON.parse( dataCacheStr );
-
+    var dataCacheAltSync = function() {
         var objToArrConverter = function(obj) {
             return Object.keys( obj ).map( function(itm) {
                 return obj[itm];
@@ -59,6 +54,14 @@ $(document).ready(function() {
 
         DATACACHEALT.artists = objToArrConverter( DATACACHE.artists );
         DATACACHEALT.tracks = objToArrConverter( DATACACHE.tracks );
+    }
+    var dataCacheStr = lsget("datacache");
+    var lastCache = parseInt( lsget("lastcache") );
+    var cacheAgeThreshold = 1000 * 60 * 60 * 24 * 7;
+    if ( dataCacheStr !== null ) {
+        DATACACHE = JSON.parse( dataCacheStr );
+
+        dataCacheAltSync();
     }
 
     var lastfmUser = "aid9990";
@@ -162,6 +165,74 @@ $(document).ready(function() {
 
     // ---------------------------------------------------------------
 
+    var performQuery = function(program, mode) {
+        var thresholdConverter = function(value, threshold) {
+            if ( value > 0 ) {
+                return threshold;
+            } else if ( value < 0 ) {
+                return -threshold;
+            }
+            return 0;
+        }
+
+        var usageThreshold = 1000 * 60 * 20;
+
+        var ret = program.map( function(line) {
+            var qsource = DATACACHEALT[mode];
+
+            qsource = qsource.map( function(itm) {
+                itm.score = line.reduce( function(prev, curr) {
+                    var idx = itm.tags.indexOf( curr );
+
+                    return prev + ( idx >= 0 ? 1 : 0);
+                }, 0);
+
+                return itm;
+            });
+
+            qsource = qsource.filter( function(itm) {
+                return itm.score > 0;
+            });
+
+            qsource = qsource.sort( function(a, b) {
+                var scoreIdx = thresholdConverter(a.score - b.score, -1);       // reverse sort
+
+                var usageIdx = 0;
+                if ( a.lastUsage !== undefined
+                     && b.lastUsage !== undefined
+                   ) {
+                    usageIdx = thresholdConverter(a.lastUsage - b.lastUsage, -2);       // reverse sort
+                }
+
+                var ret = scoreIdx + usageIdx;
+
+                return ret;
+            });
+
+            var now = (new Date()).getTime();
+            qsource = qsource.filter( function(itm) {
+                if ( itm.lastUsage !== undefined ) {
+                    return now - itm.lastUsage > usageThreshold;
+                }
+
+                return true;
+            });
+
+            return (qsource.length > 0 ? qsource[0] : {});
+        });
+
+        var nowUsage = (new Date()).getTime();
+        ret.forEach( function(itm) {
+            DATACACHE[mode][itm.name].lastUsage = nowUsage;
+        });
+
+        dataCacheAltSync();
+
+        return ret;
+    }
+
+    // ---------------------------------------------------------------
+
     if ( isNaN(lastCache)
          || ( !isNaN(lastCache)
               && (new Date()).getTime() - lastCache > cacheAgeThreshold
@@ -189,6 +260,17 @@ $(document).ready(function() {
 
         lastCache = (new Date()).getTime();
     }
+
+    // ---------------------------------------------------------------
+
+    $("#fooBtn").click( function() {
+        var pgm = performQuery( [ ["downtempo", "electronic", "jazz", "lounge", "nu-jazz"],
+                                  ["alternative", "alternative rock", "british", "britpop", "indie", "rock"],
+                                  ["chillout", "downtempo", "elevtornic", "trip-hop"]
+                                ], "artists" );
+
+        console.log( "pgm: " + pgm );
+    });
 
     $(window).unload( function() {
         lsset("datacache", JSON.stringify( DATACACHE ) );
