@@ -42,11 +42,23 @@ $(document).ready(function() {
                       tracks: {},
                       tags: []
                     };
+    var DATACACHEALT = { artists: [],
+                         tracks: []
+                       };
     var dataCacheStr = lsget("datacache");
-    var lastCache = lsget("lastcache");
+    var lastCache = parseInt( lsget("lastcache") );
     var cacheAgeThreshold = 1000 * 60 * 60 * 24 * 7;
     if ( dataCacheStr !== null ) {
         DATACACHE = JSON.parse( dataCacheStr );
+
+        var objToArrConverter = function(obj) {
+            return Object.keys( obj ).map( function(itm) {
+                return obj[itm];
+            });
+        }
+
+        DATACACHEALT.artists = objToArrConverter( DATACACHE.artists );
+        DATACACHEALT.tracks = objToArrConverter( DATACACHE.tracks );
     }
 
     var lastfmUser = "aid9990";
@@ -76,6 +88,11 @@ $(document).ready(function() {
             return DATACACHE.artists[artist][key];
         }, function(key, value) {
             DATACACHE.artists[artist][key] = value;
+
+            var idx = DATACACHEALT.artists.indexOf( DATACACHE.artists[artist] );
+            if ( idx >= 0 ) {
+                DATACACHEALT.artists[idx][key] = value;
+            }
         });
     }
 
@@ -84,14 +101,21 @@ $(document).ready(function() {
             return DATACACHE.tracks[track][key];
         }, function(key, value) {
             DATACACHE.tracks[track][key] = value;
+
+            var idx = DATACACHEALT.tracks.indexOf( DATACACHE.tracks[track] );
+            if ( idx >= 0 ) {
+                DATACACHEALT.tracks[idx][key] = value;
+            }
         });
     }
 
     var requestArtistTags = function(artistName) {
         if ( DATACACHE.artists[artistName] === undefined ) {
-            DATACACHE.artists[artistName] = { name: artistName,
-                                              tags: []
-                                            };
+            var artistObj = { name: artistName,
+                              tags: []
+                            };
+            DATACACHE.artists[artistName] = artistObj;
+            DATACACHEALT.artists.push( artistObj );
 
             throttle(function(){
                 lastfm.artist.getTopTags( { "artist": artistName},
@@ -116,10 +140,13 @@ $(document).ready(function() {
         for ( var i = 0; i < data.toptracks.track.length; ++i ) {
             (function(track) {
                 if ( DATACACHE.tracks[track.name] === undefined ) {
-                    DATACACHE.tracks[track.name] = { name: track.name,
-                                                     artist: track.artist.name,
-                                                     tags: []
-                                                   };
+                    var trackObj = { name: track.name,
+                                     artist: track.artist.name,
+                                     tags: []
+                                   };
+                    DATACACHE.tracks[track.name] = trackObj;
+                    DATACACHEALT.tracks.push( trackObj );
+
                     if ( DATACACHE.artists[track.artist.name] === undefined ) {
                         requestArtistTags(track.artist.name);
                     }
@@ -141,10 +168,10 @@ $(document).ready(function() {
 
     // ---------------------------------------------------------------
 
-    if ( DATACACHE.artists.length == 0
-         || DATACACHE.tracks.length == 0
-         || DATACACHE.tags.length == 0
-         || ( lastCache !== null && (new Date()).getTime() - lastCache > cacheAgeThreshold )
+    if ( isNaN(lastCache)
+         || ( !isNaN(lastCache)
+              && (new Date()).getTime() - lastCache > cacheAgeThreshold
+            )
        ) {
         throttle(function(){
             lastfm.user.getTopArtists( {"user": lastfmUser,
