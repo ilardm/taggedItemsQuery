@@ -244,6 +244,59 @@ $(document).ready(function() {
 
     // ---------------------------------------------------------------
 
+    var buildProgramInputWidget = function() {
+
+        // TODO: a lot of styles
+
+        var container = $("<div>", {"class": "container"});
+        var verticalContainer = $("<div>", {"class": "container vertical-container"});
+        var verticalContainerContent = $("<span>", {"class": "container vertical-container-content"});
+        var horizontalContainer = $("<div>", {"class": "container horizontal-container"});
+        var horizontalContainerContent = $("<span>", {"class": "container horizontal-container-content"});
+        var addButton = $("<button>", {"class": "btn btn-default"}).append( $("<span>", {"class": "glyphicon glyphicon-plus"}) );
+        var removeButton = $("<button>", {"class": "btn btn-default"}).append( $("<span>", {"class": "glyphicon glyphicon-remove"}) );
+        var inputField = $("<input>", {"type": "text"});
+        var inputFieldContainer = $("<span>", {"class": "container input-field-container"});
+
+        var onInputFieldKeyUp = function() {
+            // TODO: implement completion
+        }
+
+        var buildRow = function() {
+            var hc = horizontalContainer.clone();
+            var hcc = horizontalContainerContent.clone();
+            var ab = addButton.clone().click( function() {
+                var ifc = inputFieldContainer.clone();
+                var ifld = inputField.clone();
+                ifld.keyup( onInputFieldKeyUp );
+                var rb = removeButton.clone().click( function() {
+                    ifc.remove();
+                });
+
+                hcc.append( ifc.append(ifld).append(rb) );
+            });
+            var rb = removeButton.clone().click( function() {
+                hc.remove();
+            });
+
+            hc.append( hcc ).append( ab ).append( rb );
+
+            return hc;
+        }
+
+        var addRowBtn = addButton.clone().click( function() {
+            verticalContainerContent.append( buildRow() );
+        });
+
+        verticalContainerContent.append( buildRow() );
+        verticalContainer.append( verticalContainerContent ).append( addRowBtn );
+        container.append( verticalContainer );
+
+        return container;
+    }
+
+    // ---------------------------------------------------------------
+
     if ( isNaN(lastCache)
          || ( !isNaN(lastCache)
               && (new Date()).getTime() - lastCache > cacheAgeThreshold
@@ -271,6 +324,8 @@ $(document).ready(function() {
 
         lastCache = (new Date()).getTime();
     }
+
+    $("#home").append( buildProgramInputWidget );
 
     // ---------------------------------------------------------------
 
