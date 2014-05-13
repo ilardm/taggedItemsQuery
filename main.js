@@ -68,17 +68,15 @@ $(document).ready(function() {
     var processTopTags = function(data, getter, setter) {
         var tags = getter("tags");
 
-        for ( var i = 0; i < data.toptags.tag.length; ++i ) {
-            (function(tag) {
-                if ( tags.indexOf( tag.name ) == -1 ) {
-                    tags.push( tag.name );
-                }
+        data.toptags.tag.forEach(function(tag) {
+            if ( tags.indexOf( tag.name ) == -1 ) {
+                tags.push( tag.name );
+            }
 
-                if ( DATACACHE.tags.indexOf( tag.name ) == -1 ) {
-                    DATACACHE.tags.push( tag.name );
-                }
-            })(data.toptags.tag[i]);
-        }
+            if ( DATACACHE.tags.indexOf( tag.name ) == -1 ) {
+                DATACACHE.tags.push( tag.name );
+            }
+        });
 
         setter("tags", tags);
     }
@@ -129,41 +127,37 @@ $(document).ready(function() {
     }
 
     var processTopArtists = function(data) {
-        for ( var i = 0; i < data.topartists.artist.length; ++i ) {
-            (function(artist) {
-                requestArtistTags(artist.name);
-            })(data.topartists.artist[i]);
-        }
+        data.topartists.artist.forEach(function(artist) {
+            requestArtistTags(artist.name);
+        });
     }
 
     var processTopTracks = function(data) {
-        for ( var i = 0; i < data.toptracks.track.length; ++i ) {
-            (function(track) {
-                if ( DATACACHE.tracks[track.name] === undefined ) {
-                    var trackObj = { name: track.name,
-                                     artist: track.artist.name,
-                                     tags: []
-                                   };
-                    DATACACHE.tracks[track.name] = trackObj;
-                    DATACACHEALT.tracks.push( trackObj );
+        data.toptracks.track.forEach(function(track) {
+            if ( DATACACHE.tracks[track.name] === undefined ) {
+                var trackObj = { name: track.name,
+                                 artist: track.artist.name,
+                                 tags: []
+                               };
+                DATACACHE.tracks[track.name] = trackObj;
+                DATACACHEALT.tracks.push( trackObj );
 
-                    if ( DATACACHE.artists[track.artist.name] === undefined ) {
-                        requestArtistTags(track.artist.name);
-                    }
-
-                    throttle(function(){
-                        lastfm.track.getTopTags( { "artist": track.artist.name,
-                                                   "track": track.name
-                                                 },
-                                                 { "success": function(data) {
-                                                     processTopTagsOfTrack(data, track.name);
-                                                 },
-                                                   "error": onApiError
-                                                 });
-                    }, apiCallInterval);
+                if ( DATACACHE.artists[track.artist.name] === undefined ) {
+                    requestArtistTags(track.artist.name);
                 }
-            })(data.toptracks.track[i]);
-        }
+
+                throttle(function(){
+                    lastfm.track.getTopTags( { "artist": track.artist.name,
+                                               "track": track.name
+                                             },
+                                             { "success": function(data) {
+                                                 processTopTagsOfTrack(data, track.name);
+                                             },
+                                               "error": onApiError
+                                             });
+                }, apiCallInterval);
+            }
+        });
     }
 
     // ---------------------------------------------------------------
