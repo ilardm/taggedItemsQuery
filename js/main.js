@@ -257,6 +257,7 @@ $(document).ready(function() {
 
     var buildProgramInputWidget = function() {
         var container = $("<div>", {"class": "tw-container"});
+        var modeSelect = $("<select>", {"class": "tw-mode-select form-control"});
         var verticalContainer = $("<div>", {"class": "tw-container tw-vertical-container"});
         var verticalContainerContent = $("<span>", {"class": "tw-container tw-vertical-container-content"});
         var horizontalContainer = $("<div>", {"class": "tw-container tw-horizontal-container"});
@@ -291,9 +292,12 @@ $(document).ready(function() {
             verticalContainerContent.append( buildRow() );
         });
 
+        modeSelect.append( $("<option>").val("artists").text("Artists") )
+            .append( $("<option>").val("tracks").text("Tracks") );
+
         verticalContainerContent.append( buildRow() );
         verticalContainer.append( verticalContainerContent ).append( addRowBtn );
-        container.append( verticalContainer );
+        container.append( modeSelect ).append( verticalContainer );
 
         return container;
     }
