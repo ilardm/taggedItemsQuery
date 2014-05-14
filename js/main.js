@@ -244,6 +244,17 @@ $(document).ready(function() {
 
     // ---------------------------------------------------------------
 
+    var runProgramFunction = function(piwContainer) {
+        // $("#fooBtn").click( function() {
+        //     var pgm = performQuery( [ ["downtempo", "electronic", "jazz", "lounge", "nu-jazz"],
+        //                               ["alternative", "alternative rock", "british", "britpop", "indie", "rock"],
+        //                               ["chillout", "downtempo", "elevtornic", "trip-hop"]
+        //                             ], "artists" );
+
+        //     console.log( "pgm: " + pgm );
+        // });
+    }
+
     var buildProgramInputWidget = function() {
         var container = $("<div>", {"class": "tw-container"});
         var verticalContainer = $("<div>", {"class": "tw-container tw-vertical-container"});
@@ -252,7 +263,7 @@ $(document).ready(function() {
         var horizontalContainerContent = $("<span>", {"class": "tw-container tw-horizontal-container-content"});
         var addButton = $("<button>", {"class": "btn"}).append( $("<span>", {"class": "glyphicon glyphicon-plus"}) );
         var removeButton = $("<button>", {"class": "btn"}).append( $("<span>", {"class": "glyphicon glyphicon-remove"}) );
-        var inputField = $("<input>", {"type": "text"});
+        var inputField = $("<input>", {"type": "text", "class": "tw-input-field"});
         var inputFieldContainer = $("<span>", {"class": "tw-container tw-input-field-container"});
 
         var buildRow = function() {
@@ -287,6 +298,58 @@ $(document).ready(function() {
         return container;
     }
 
+    var buildProgramResultWidget = function() {
+        var container = $("<div>", {"class": "prw-container"});
+        var ul = $("<ul>", {"class": "prw-list"});
+
+        container.append( ul );
+
+        return container;
+    }
+
+    var buildResultItemInfoWidget = function() {
+        var container = $("<div>", {"class": "rii-container"});
+        var text = $("<div>", {"class": "rii-container rii-text-container"});
+        var ul = $("<ul>", {"class": "rii-list"});
+
+        container.append( text ).append( ul );
+
+        return container;
+    }
+
+    var buildProgramWidget = function(runFunction) {
+        var container = $("<div>", {"class": "pw-container row"});
+        var piw = buildProgramInputWidget();
+        var prw = buildProgramResultWidget();
+        var riiw = buildResultItemInfoWidget();
+        var runButton = $("<button>", {"class": "btn btn-success"})
+            .append( $("<span>", {"class": "glyphicon glyphicon-play"}) )
+            .click( function() {
+                runFunction(piw);
+            });
+
+        container.append( piw.addClass("col-md-4") )
+            .append( prw.addClass("col-md-4") )
+            .append( riiw.addClass("col-md-4") )
+            .append( runButton );
+
+        return container;
+    }
+
+    var buildProgramWidgetContainer = function() {
+        var container = $("<div>", {"class": "container"});
+        var contentContainer = container.clone();
+        var addButton = $("<button>", {"class": "btn btn-info"}).append( $("<span>", {"class": "glyphicon glyphicon-plus"}) );
+
+        addButton.click( function() {
+            contentContainer.append( buildProgramWidget( runProgramFunction ) );
+        });
+        contentContainer.append( buildProgramWidget() );
+        container.append( contentContainer ).append( addButton );
+
+        return container;
+    }
+
     // ---------------------------------------------------------------
 
     if ( isNaN(lastCache)
@@ -317,18 +380,9 @@ $(document).ready(function() {
         lastCache = (new Date()).getTime();
     }
 
-    $("#home").append( buildProgramInputWidget );
+    $("#home").append( buildProgramWidgetContainer() );
 
     // ---------------------------------------------------------------
-
-    $("#fooBtn").click( function() {
-        var pgm = performQuery( [ ["downtempo", "electronic", "jazz", "lounge", "nu-jazz"],
-                                  ["alternative", "alternative rock", "british", "britpop", "indie", "rock"],
-                                  ["chillout", "downtempo", "elevtornic", "trip-hop"]
-                                ], "artists" );
-
-        console.log( "pgm: " + pgm );
-    });
 
     $(window).unload( function() {
         lsset("datacache", JSON.stringify( DATACACHE ) );

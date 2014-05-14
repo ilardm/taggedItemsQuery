@@ -14,6 +14,26 @@ body {
     overflow-x: hidden;
 }
 
+.tw-input-field {
+    width: 100px;
+}
+
 .tw-input-field-container {
     margin: 5px;
+}
+
+.tw-horizontal-container {
+    margin: 2px;
+    padding: 2px;
+    border: solid 1px;
+    border-color: black;
+    border-radius: 2px;
+}
+
+.pw-container {
+    margin: 2px;
+    padding: 2px;
+    border: solid 1px;
+    border-color: black;
+    border-radius: 2px;
 }
