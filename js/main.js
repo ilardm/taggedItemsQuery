@@ -244,8 +244,21 @@ $(document).ready(function() {
 
     // ---------------------------------------------------------------
 
-    var runProgramFunction = function(piwContainer) {
+    var runProgramFunction = function(piwContainer, fillResults) {
         var mode = piwContainer.find(".tw-mode-select")[0].value;
+        var textTransformer = function(res) {
+            return res.toString();
+        };
+
+        if ( mode === "artists" ) {
+            textTransformer = function(res) {
+                return res.name;
+            }
+        } else if ( mode === "tracks" ) {
+            textTransformer = function(res) {
+                return res.artist + " - " + res.name;
+            }
+        }
 
         var program = [];
 
@@ -260,6 +273,7 @@ $(document).ready(function() {
         });
 
         var result = performQuery( program, mode );
+        fillResults(result, textTransformer);
     }
 
     var buildProgramInputWidget = function() {
@@ -309,6 +323,19 @@ $(document).ready(function() {
         return container;
     }
 
+    var fillResultsFunction = function(prwContainer, results, resultTextTransformer, fillInfoFunction) {
+        var ul = $( prwContainer.find(".prw-list")[0] );
+        ul.empty();
+
+        results.forEach( function(res) {
+            var li = $("<li>").text( resultTextTransformer(res) )
+                .click( function() {
+                    fillInfoFunction(res);
+                });
+            ul.append( li );
+        });
+    }
+
     var buildProgramResultWidget = function() {
         var container = $("<div>", {"class": "prw-container"});
         var ul = $("<ul>", {"class": "prw-list"});
@@ -328,7 +355,7 @@ $(document).ready(function() {
         return container;
     }
 
-    var buildProgramWidget = function(runFunction) {
+    var buildProgramWidget = function(runFunction, showResultsFunction, fillInfoFunction) {
         var container = $("<div>", {"class": "pw-container row"});
         var piw = buildProgramInputWidget();
         var prw = buildProgramResultWidget();
@@ -336,7 +363,9 @@ $(document).ready(function() {
         var runButton = $("<button>", {"class": "btn btn-success"})
             .append( $("<span>", {"class": "glyphicon glyphicon-play"}) )
             .click( function() {
-                runFunction(piw);
+                runFunction(piw, function(res, conv) {
+                    showResultsFunction(prw, res, conv, null)
+                });
             });
 
         container.append( piw.addClass("col-md-4") )
@@ -353,9 +382,9 @@ $(document).ready(function() {
         var addButton = $("<button>", {"class": "btn btn-info"}).append( $("<span>", {"class": "glyphicon glyphicon-plus"}) );
 
         addButton.click( function() {
-            contentContainer.append( buildProgramWidget( runProgramFunction ) );
+            contentContainer.append( buildProgramWidget( runProgramFunction, fillResultsFunction ) );
         });
-        contentContainer.append( buildProgramWidget( runProgramFunction ) );
+        contentContainer.append( buildProgramWidget( runProgramFunction, fillResultsFunction ) );
         container.append( contentContainer ).append( addButton );
 
         return container;
