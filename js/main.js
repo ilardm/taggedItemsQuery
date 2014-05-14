@@ -245,14 +245,21 @@ $(document).ready(function() {
     // ---------------------------------------------------------------
 
     var runProgramFunction = function(piwContainer) {
-        // $("#fooBtn").click( function() {
-        //     var pgm = performQuery( [ ["downtempo", "electronic", "jazz", "lounge", "nu-jazz"],
-        //                               ["alternative", "alternative rock", "british", "britpop", "indie", "rock"],
-        //                               ["chillout", "downtempo", "elevtornic", "trip-hop"]
-        //                             ], "artists" );
+        var mode = piwContainer.find(".tw-mode-select")[0].value;
 
-        //     console.log( "pgm: " + pgm );
-        // });
+        var program = [];
+
+        piwContainer.find(".tw-horizontal-container-content").each( function(idx, hc) {
+            var line = [];
+            $(hc).find(".tw-input-field").each( function(idx, ifld) {
+                if ( ifld.value ) {
+                    line.push( ifld.value );
+                }
+            });
+            program.push( line );
+        });
+
+        var result = performQuery( program, mode );
     }
 
     var buildProgramInputWidget = function() {
@@ -348,7 +355,7 @@ $(document).ready(function() {
         addButton.click( function() {
             contentContainer.append( buildProgramWidget( runProgramFunction ) );
         });
-        contentContainer.append( buildProgramWidget() );
+        contentContainer.append( buildProgramWidget( runProgramFunction ) );
         container.append( contentContainer ).append( addButton );
 
         return container;
