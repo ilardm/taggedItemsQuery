@@ -245,33 +245,29 @@ $(document).ready(function() {
     // ---------------------------------------------------------------
 
     var buildProgramInputWidget = function() {
-
-        // TODO: a lot of styles
-
-        var container = $("<div>", {"class": "container"});
-        var verticalContainer = $("<div>", {"class": "container vertical-container"});
-        var verticalContainerContent = $("<span>", {"class": "container vertical-container-content"});
-        var horizontalContainer = $("<div>", {"class": "container horizontal-container"});
-        var horizontalContainerContent = $("<span>", {"class": "container horizontal-container-content"});
-        var addButton = $("<button>", {"class": "btn btn-default"}).append( $("<span>", {"class": "glyphicon glyphicon-plus"}) );
-        var removeButton = $("<button>", {"class": "btn btn-default"}).append( $("<span>", {"class": "glyphicon glyphicon-remove"}) );
+        var container = $("<div>", {"class": "tw-container"});
+        var verticalContainer = $("<div>", {"class": "tw-container tw-vertical-container"});
+        var verticalContainerContent = $("<span>", {"class": "tw-container tw-vertical-container-content"});
+        var horizontalContainer = $("<div>", {"class": "tw-container tw-horizontal-container"});
+        var horizontalContainerContent = $("<span>", {"class": "tw-container tw-horizontal-container-content"});
+        var addButton = $("<button>", {"class": "btn"}).append( $("<span>", {"class": "glyphicon glyphicon-plus"}) );
+        var removeButton = $("<button>", {"class": "btn"}).append( $("<span>", {"class": "glyphicon glyphicon-remove"}) );
         var inputField = $("<input>", {"type": "text"});
-        var inputFieldContainer = $("<span>", {"class": "container input-field-container"});
+        var inputFieldContainer = $("<span>", {"class": "tw-container tw-input-field-container"});
 
         var buildRow = function() {
             var hc = horizontalContainer.clone();
             var hcc = horizontalContainerContent.clone();
-            var ab = addButton.clone().click( function() {
+            var ab = addButton.clone().addClass("btn-default").click( function() {
                 var ifc = inputFieldContainer.clone();
-                var id = "" + (new Date()).getTime();
                 var ifld = inputField.clone().autocomplete({source: DATACACHE.tags});
-                var rb = removeButton.clone().click( function() {
+                var rb = removeButton.clone().addClass("btn-default").click( function() {
                     ifc.remove();
                 });
 
                 hcc.append( ifc.append(ifld).append(rb) );
             });
-            var rb = removeButton.clone().click( function() {
+            var rb = removeButton.clone().addClass("btn-primary").click( function() {
                 hc.remove();
             });
 
@@ -280,7 +276,7 @@ $(document).ready(function() {
             return hc;
         }
 
-        var addRowBtn = addButton.clone().click( function() {
+        var addRowBtn = addButton.clone().addClass("btn-primary").click( function() {
             verticalContainerContent.append( buildRow() );
         });
 

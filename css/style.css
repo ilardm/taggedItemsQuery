@@ -13,3 +13,7 @@ body {
     /* prevent horizontal scrollbar */
     overflow-x: hidden;
 }
+
+.tw-input-field-container {
+    margin: 5px;
+}
