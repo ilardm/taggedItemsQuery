@@ -258,17 +258,13 @@ $(document).ready(function() {
         var inputField = $("<input>", {"type": "text"});
         var inputFieldContainer = $("<span>", {"class": "container input-field-container"});
 
-        var onInputFieldKeyUp = function() {
-            // TODO: implement completion
-        }
-
         var buildRow = function() {
             var hc = horizontalContainer.clone();
             var hcc = horizontalContainerContent.clone();
             var ab = addButton.clone().click( function() {
                 var ifc = inputFieldContainer.clone();
-                var ifld = inputField.clone();
-                ifld.keyup( onInputFieldKeyUp );
+                var id = "" + (new Date()).getTime();
+                var ifld = inputField.clone().autocomplete({source: DATACACHE.tags});
                 var rb = removeButton.clone().click( function() {
                     ifc.remove();
                 });
