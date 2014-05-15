@@ -223,8 +223,10 @@ $(document).ready(function() {
 
         var nowUsage = (new Date()).getTime();
         ret = ret.reduce( function(prev, curr) {
-            var notInPrev = curr.filter( function(item) {
-                return prev.indexOf(item) < 1;
+            var notInPrev = curr.filter( function(ci) {
+                return !prev.some( function(pi) {
+                    return pi.name === ci.name;
+                });
             });
 
             if ( notInPrev.length > 0 ) {
@@ -240,6 +242,170 @@ $(document).ready(function() {
         dataCacheAltSync();
 
         return ret;
+    }
+
+    // ---------------------------------------------------------------
+
+    var runProgramFunction = function(piwContainer, fillResults) {
+        var mode = piwContainer.find(".tw-mode-select")[0].value;
+        var textTransformer = function(res) {
+            return res.toString();
+        };
+
+        if ( mode === "artists" ) {
+            textTransformer = function(res) {
+                return res.name;
+            }
+        } else if ( mode === "tracks" ) {
+            textTransformer = function(res) {
+                return res.artist + " - " + res.name;
+            }
+        }
+
+        var program = [];
+
+        piwContainer.find(".tw-horizontal-container-content").each( function(idx, hc) {
+            var line = [];
+            $(hc).find(".tw-input-field").each( function(idx, ifld) {
+                if ( ifld.value ) {
+                    line.push( ifld.value );
+                }
+            });
+            program.push( line );
+        });
+
+        var result = performQuery( program, mode );
+        fillResults(result, textTransformer);
+    }
+
+    var buildProgramInputWidget = function() {
+        var container = $("<div>", {"class": "tw-container"});
+        var modeSelect = $("<select>", {"class": "tw-mode-select form-control"});
+        var verticalContainer = $("<div>", {"class": "tw-container tw-vertical-container"});
+        var verticalContainerContent = $("<span>", {"class": "tw-container tw-vertical-container-content"});
+        var horizontalContainer = $("<div>", {"class": "tw-container tw-horizontal-container"});
+        var horizontalContainerContent = $("<span>", {"class": "tw-container tw-horizontal-container-content"});
+        var addButton = $("<button>", {"class": "btn"}).append( $("<span>", {"class": "glyphicon glyphicon-plus"}) );
+        var removeButton = $("<button>", {"class": "btn"}).append( $("<span>", {"class": "glyphicon glyphicon-remove"}) );
+        var inputField = $("<input>", {"type": "text", "class": "tw-input-field"});
+        var inputFieldContainer = $("<span>", {"class": "tw-container tw-input-field-container"});
+
+        var buildRow = function() {
+            var hc = horizontalContainer.clone();
+            var hcc = horizontalContainerContent.clone();
+            var ab = addButton.clone().addClass("btn-default").click( function() {
+                var ifc = inputFieldContainer.clone();
+                var ifld = inputField.clone().autocomplete({source: DATACACHE.tags});
+                var rb = removeButton.clone().addClass("btn-warning").click( function() {
+                    ifc.remove();
+                });
+
+                hcc.append( ifc.append(ifld).append(rb) );
+            });
+            var rb = removeButton.clone().addClass("btn-primary").click( function() {
+                hc.remove();
+            });
+
+            hc.append( hcc ).append( ab ).append( rb );
+
+            return hc;
+        }
+
+        var addRowBtn = addButton.clone().addClass("btn-primary").click( function() {
+            verticalContainerContent.append( buildRow() );
+        });
+
+        modeSelect.append( $("<option>").val("artists").text("Artists") )
+            .append( $("<option>").val("tracks").text("Tracks") );
+
+        verticalContainerContent.append( buildRow() );
+        verticalContainer.append( verticalContainerContent ).append( addRowBtn );
+        container.append( modeSelect ).append( verticalContainer );
+
+        return container;
+    }
+
+    var fillResultsFunction = function(prwContainer, results, resultTextTransformer, fillInfoFunction) {
+        var ul = $( prwContainer.find(".prw-list")[0] );
+        ul.empty();
+
+        results.forEach( function(res) {
+            var li = $("<li>").text( resultTextTransformer(res) )
+                .click( function() {
+                    fillInfoFunction(res);
+                });
+            ul.append( li );
+        });
+    }
+
+    var buildProgramResultWidget = function() {
+        var container = $("<div>", {"class": "prw-container"});
+        var ul = $("<ul>", {"class": "prw-list"});
+
+        container.append( ul );
+
+        return container;
+    }
+
+
+    var fillResultItemInfoFunction = function(riiwContainer, result, textConverter) {
+        var textContainer = $( riiwContainer.find(".rii-text-container")[0] );
+        textContainer.text( textConverter(result) );
+
+        var ul = $( riiwContainer.find(".rii-list")[0] );
+        ul.empty();
+
+        result.tags.forEach( function(tag) {
+            var li = $("<li>").text( tag );
+            ul.append( li );
+        });
+    }
+
+    var buildResultItemInfoWidget = function() {
+        var container = $("<div>", {"class": "rii-container"});
+        var text = $("<div>", {"class": "rii-container rii-text-container"});
+        var ul = $("<ul>", {"class": "rii-list"});
+
+        container.append( text ).append( ul );
+
+        return container;
+    }
+
+    var buildProgramWidget = function(runFunction, showResultsFunction, fillInfoFunction) {
+        var container = $("<div>", {"class": "pw-container row"});
+        var piw = buildProgramInputWidget();
+        var prw = buildProgramResultWidget();
+        var riiw = buildResultItemInfoWidget();
+        var runButton = $("<button>", {"class": "btn btn-success"})
+            .append( $("<span>", {"class": "glyphicon glyphicon-play"}) )
+            .click( function() {
+                runFunction(piw, function(res, conv) {
+                    showResultsFunction(prw, res, conv, function(res) {
+                        fillResultItemInfoFunction(riiw, res, conv);
+                    });
+                });
+            });
+
+        container.append( piw.addClass("col-md-4") )
+            .append( prw.addClass("col-md-4") )
+            .append( riiw.addClass("col-md-4") )
+            .append( runButton );
+
+        return container;
+    }
+
+    var buildProgramWidgetContainer = function() {
+        var container = $("<div>", {"class": "container"});
+        var contentContainer = container.clone();
+        var addButton = $("<button>", {"class": "btn btn-info"}).append( $("<span>", {"class": "glyphicon glyphicon-plus"}) );
+
+        addButton.click( function() {
+            contentContainer.append( buildProgramWidget( runProgramFunction, fillResultsFunction ) );
+        });
+        contentContainer.append( buildProgramWidget( runProgramFunction, fillResultsFunction ) );
+        container.append( contentContainer ).append( addButton );
+
+        return container;
     }
 
     // ---------------------------------------------------------------
@@ -272,16 +438,9 @@ $(document).ready(function() {
         lastCache = (new Date()).getTime();
     }
 
+    $("#home").append( buildProgramWidgetContainer() );
+
     // ---------------------------------------------------------------
-
-    $("#fooBtn").click( function() {
-        var pgm = performQuery( [ ["downtempo", "electronic", "jazz", "lounge", "nu-jazz"],
-                                  ["alternative", "alternative rock", "british", "britpop", "indie", "rock"],
-                                  ["chillout", "downtempo", "elevtornic", "trip-hop"]
-                                ], "artists" );
-
-        console.log( "pgm: " + pgm );
-    });
 
     $(window).unload( function() {
         lsset("datacache", JSON.stringify( DATACACHE ) );
