@@ -223,8 +223,10 @@ $(document).ready(function() {
 
         var nowUsage = (new Date()).getTime();
         ret = ret.reduce( function(prev, curr) {
-            var notInPrev = curr.filter( function(item) {
-                return prev.indexOf(item) < 1;
+            var notInPrev = curr.filter( function(ci) {
+                return !prev.some( function(pi) {
+                    return pi.name === ci.name;
+                });
             });
 
             if ( notInPrev.length > 0 ) {
