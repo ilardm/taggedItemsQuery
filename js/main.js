@@ -296,7 +296,7 @@ $(document).ready(function() {
             var ab = addButton.clone().addClass("btn-default").click( function() {
                 var ifc = inputFieldContainer.clone();
                 var ifld = inputField.clone().autocomplete({source: DATACACHE.tags});
-                var rb = removeButton.clone().addClass("btn-default").click( function() {
+                var rb = removeButton.clone().addClass("btn-warning").click( function() {
                     ifc.remove();
                 });
 
