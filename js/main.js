@@ -347,6 +347,20 @@ $(document).ready(function() {
         return container;
     }
 
+
+    var fillResultItemInfoFunction = function(riiwContainer, result, textConverter) {
+        var textContainer = $( riiwContainer.find(".rii-text-container")[0] );
+        textContainer.text( textConverter(result) );
+
+        var ul = $( riiwContainer.find(".rii-list")[0] );
+        ul.empty();
+
+        result.tags.forEach( function(tag) {
+            var li = $("<li>").text( tag );
+            ul.append( li );
+        });
+    }
+
     var buildResultItemInfoWidget = function() {
         var container = $("<div>", {"class": "rii-container"});
         var text = $("<div>", {"class": "rii-container rii-text-container"});
@@ -366,7 +380,9 @@ $(document).ready(function() {
             .append( $("<span>", {"class": "glyphicon glyphicon-play"}) )
             .click( function() {
                 runFunction(piw, function(res, conv) {
-                    showResultsFunction(prw, res, conv, null)
+                    showResultsFunction(prw, res, conv, function(res) {
+                        fillResultItemInfoFunction(riiw, res, conv);
+                    });
                 });
             });
 
